@@ -33,7 +33,6 @@
   - #### *deployment_playbook.yaml : 指定任務邏輯的來源檔案*
   - ![PNG](../sample/ansible_success_00.PNG)
   - ![PNG](../sample/ansible_success_01.PNG)
-  - ![PNG](../sample/ansible_success_02.PNG)
 
 <br>
 
@@ -44,4 +43,4 @@
   docker logs pc-hello-world-edge-01
   docker logs pc-hello-world-edge-02
   ```
-  - ![PNG](../sample/docker_ps_01.PNG)
+  - ![PNG](../sample/ansible_success_02.PNG)
