@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  edge_app:
+    # 從 Ansible 變數中取得 Registry 地址
+    image: "{{ REGISTRY_HOST_PORT }}/my_edge_service:latest"
+    # 使用裝置 ID 確保容器名稱唯一
+    container_name: edge_service_{{ DEVICE_ID }}
+    ports:
+      # ⚠️ 使用裝置專屬埠口
+      - "{{ DEPLOY_PORT }}:80"
+    restart: always
+    environment:
+      # 將裝置專屬變數傳遞給容器
+      DEVICE_ID: "{{ DEVICE_ID }}"
+      LOG_LEVEL: "{{ LOG_LEVEL }}"

@@ -27,7 +27,7 @@
 
 <br>
 
-### *B.　準備 Ansible 和 Docker*
+### *B.　準備 Ansible 環境*
 - #### *更新系統*
     ```bash
     sudo apt update && sudo apt upgrade -y
@@ -53,3 +53,31 @@
     ```
 
 <br>
+
+### *B.　串接本地 Docker 環境*
+- #### *確認選項是否勾選*
+- ![PNG](../sample/wsl_enable.PNG)
+
+- #### *將用戶添加 root 權限 # 在 Linux 系統中，只有 root 使用者和屬於 docker 群組的使用者才有權限直接與 Docker Daemon 通訊*
+  - ##### *將使用者加入群組*
+    ```bash
+    sudo usermod -aG docker $USER
+    ```
+    - ##### *sudo : 授予您執行此命令的超級使用者權限*
+    - ##### *usermod : 用於修改使用者帳戶*
+    - ##### *-aG : 參數 -a 表示追加 (append)，-G 表示群組 (Groups)。這會將使用者追加到指定的群組，而不會移除他們從其他群組的成員資格*
+    - ##### *docker : 加入的目標群組*
+    - ##### *$USER : 當前登入的使用者名稱*
+
+  - ##### *重新登入或啟用群組變更*
+    ```bash
+    newgrp docker
+    ```
+    
+  - ##### *驗證權限*
+    ```bash
+    docker ps
+    ```
+  - ![PNG](../sample/docker%20ps.PNG)
+
+

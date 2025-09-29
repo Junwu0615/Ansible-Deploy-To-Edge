@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  task:
+    image: pc-hello-world:latest
+    user: 1998:1998
+
+    env_file:
+      - .env
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.platform.arch == x86_64
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
