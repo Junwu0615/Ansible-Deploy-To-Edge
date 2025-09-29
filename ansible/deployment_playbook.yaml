@@ -1,6 +1,7 @@
 ---
-- name: 部署應用程式到邊緣裝置
-  hosts: wsl_hosts
+- name: 模擬部署 - 使用 Ansible 將指定服務一鍵下發到所有邊緣裝置
+#  hosts: wsl_hosts
+  hosts: device_configs
   become: false
   gather_facts: false
 
@@ -32,7 +33,6 @@
         src: "{{ playbook_dir }}/templates/docker-compose.yaml.j2"
         # 儲存為一個新的純 YAML 檔案，這樣 docker-compose 才能讀取
         dest: "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml"
-      # 這個 task 應該在部署環境（wsl_hosts）上執行
 
     # ----------------------------------------------------
     - name: 3.2. 啟動容器 ( docker-compose up )
