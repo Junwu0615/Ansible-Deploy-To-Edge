@@ -1,6 +1,7 @@
 ---
 - name: Deploy Edge Services from Private Registry
-  hosts: wsl_host
+#  hosts: wsl_host
+  hosts: device_configs
   become: yes
 
   tasks:
@@ -35,27 +36,26 @@
           =======================================================
 
     # ----------------------------------------------------
-    # --- 模擬多裝置部署的主循環 (改為單任務迴圈) ---
+    # --- 模擬多裝置部署的主循環 (單任務迴圈) ---
     # ----------------------------------------------------
+
     - name: 3.a. 建立裝置專屬部署目錄 ({{ item }})
       ansible.builtin.file:
         path: "/opt/{{ item }}_app"
         state: directory
         owner: "{{ ansible_user }}"
         mode: '0755'
-      # 將迴圈應用到單個任務
+      # ⚠️ 必須將 loop 放在這裡
       loop: "{{ groups['device_configs'] }}"
-      # 為了確保前面的配置任務只執行一次，我們將在這裡再次要求 become: no
-      # 以避免在每次迴圈中都要求提權
+      # 這裡不需要 become: yes，因為上層 Playbook 已經定義了
 
     - name: 3.b. 複製 docker-compose.yaml 模板並渲染配置 ({{ item }})
       ansible.builtin.template:
-        src: docker-compose.yaml.j2
-        dest: "/opt/{{ item }}_app/docker-compose.yaml"
+        src: docker-compose.yml.j2
+        dest: "/opt/{{ item }}_app/docker-compose.yml"
         owner: "{{ ansible_user }}"
         mode: '0644'
       vars:
-        # vars 需要與 loop 在同一個任務中定義
         DEVICE_ID: "{{ hostvars[item]['DEVICE_ID'] }}"
         LOG_LEVEL: "{{ hostvars[item]['LOG_LEVEL'] }}"
         DEPLOY_PORT: "{{ hostvars[item]['DEPLOY_PORT'] }}"
@@ -71,6 +71,7 @@
         DEVICE_ID: "{{ hostvars[item]['DEVICE_ID'] }}"
         LOG_LEVEL: "{{ hostvars[item]['LOG_LEVEL'] }}"
         REGISTRY_HOST_PORT: "{{ REGISTRY_HOST_PORT }}"
+      # ⚠️ 這裡必須明確指定 become: no，因為 docker-compose 不應用 root 執行
       become: no
       remote_user: "{{ ansible_user }}"
       loop: "{{ groups['device_configs'] }}"
