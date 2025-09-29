@@ -1,0 +1,76 @@
+---
+- name: Deploy Edge Services from Private Registry
+  hosts: wsl_host
+  become: yes
+
+  tasks:
+    - name: 0. 確保 Docker 配置目錄存在
+      ansible.builtin.file:
+        path: /etc/docker
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      become: yes
+
+    - name: 1. 配置 Insecure Registry (daemon.json)
+      copy:
+        src: "{{ playbook_dir }}/files/daemon.json"
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: 2. ⚠️ 必須手動重啟 Docker Desktop 以載入新的配置
+      ansible.builtin.pause:
+        prompt: |
+          =======================================================
+          請注意：您必須手動重啟 Windows 上的 Docker Desktop！
+          
+          1. 儲存 daemon.json。
+          2. 在 Windows 系統匣中右鍵點擊 Docker 圖示。
+          3. 選擇 "Restart"。
+          
+          重啟完成後，請按 Enter 繼續部署...
+          =======================================================
+
+    # ----------------------------------------------------
+    # --- 模擬多裝置部署的主循環 (改為單任務迴圈) ---
+    # ----------------------------------------------------
+    - name: 3.a. 建立裝置專屬部署目錄 ({{ item }})
+      ansible.builtin.file:
+        path: "/opt/{{ item }}_app"
+        state: directory
+        owner: "{{ ansible_user }}"
+        mode: '0755'
+      # 將迴圈應用到單個任務
+      loop: "{{ groups['device_configs'] }}"
+      # 為了確保前面的配置任務只執行一次，我們將在這裡再次要求 become: no
+      # 以避免在每次迴圈中都要求提權
+
+    - name: 3.b. 複製 docker-compose.yaml 模板並渲染配置 ({{ item }})
+      ansible.builtin.template:
+        src: docker-compose.yaml.j2
+        dest: "/opt/{{ item }}_app/docker-compose.yaml"
+        owner: "{{ ansible_user }}"
+        mode: '0644'
+      vars:
+        # vars 需要與 loop 在同一個任務中定義
+        DEVICE_ID: "{{ hostvars[item]['DEVICE_ID'] }}"
+        LOG_LEVEL: "{{ hostvars[item]['LOG_LEVEL'] }}"
+        DEPLOY_PORT: "{{ hostvars[item]['DEPLOY_PORT'] }}"
+      loop: "{{ groups['device_configs'] }}"
+
+    - name: 3.c. 部署 Docker Compose 服務 ({{ item }})
+      community.docker.docker_compose_v2:
+        project_src: "/opt/{{ item }}_app"
+        project_name: "{{ item }}_project"
+        state: present
+        pull: yes
+      environment:
+        DEVICE_ID: "{{ hostvars[item]['DEVICE_ID'] }}"
+        LOG_LEVEL: "{{ hostvars[item]['LOG_LEVEL'] }}"
+        REGISTRY_HOST_PORT: "{{ REGISTRY_HOST_PORT }}"
+      become: no
+      remote_user: "{{ ansible_user }}"
+      loop: "{{ groups['device_configs'] }}"

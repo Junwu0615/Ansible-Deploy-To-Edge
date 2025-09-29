@@ -54,7 +54,7 @@
 
 <br>
 
-### *B.　串接本地 Docker 環境*
+### *C.　串接本地 Docker 環境*
 - #### *確認選項是否勾選*
 - ![PNG](../sample/wsl_enable.PNG)
 
@@ -82,7 +82,42 @@
 
 <br>
 
-### *C.　Other Notice*
+### *D.　SSH 驗證*
+  - ##### *檢查 SSH Server 是否運行*
+    ```bash
+    sudo service ssh status
+    
+    # 若未運行，請啟動
+    sudo service ssh start
+    ```
+    
+  - ##### *確認 SSH 密碼登入已啟用 # 使用 SSH Key（ 推薦用於自動化 ）*
+    ```bash
+    ssh-keygen -t rsa
+    # 一路按 Enter，使用預設路徑和空密碼
+    ```
+
+  - ##### *重新登入或啟用群組變更*
+    ```bash
+    ssh-copy-id pc@127.0.0.1
+    ```
+
+  - ##### *若成功，顯示如下*
+    ```bash
+    Number of keys added: 1
+
+    Now try logging into the machine, with:   "ssh 'pc@127.0.0.1'"
+    and check to make sure that only the key(s) you wanted were added.
+    ```
+    
+  - ##### *測試連線*
+    ```bash
+    ssh pc@127.0.0.1
+    ```
+
+<br>
+
+### *E.　Other Notice*
   - #### *用檔案總管瀏覽路徑，熟悉 Linux 如何印設 Windows 路徑*
     ```text
     # 於檔案總管路徑輸入

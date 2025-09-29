@@ -1,0 +1,5 @@
+{
+  "insecure-registries": [
+    "host.docker.internal:5000"
+  ]
+}
