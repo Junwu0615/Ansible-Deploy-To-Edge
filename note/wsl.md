@@ -80,4 +80,15 @@
     ```
   - ![PNG](../sample/docker%20ps.PNG)
 
+<br>
 
+### *C.　Other Notice*
+  - #### *用檔案總管瀏覽路徑，熟悉 Linux 如何印設 Windows 路徑*
+    ```text
+    # 於檔案總管路徑輸入
+    \\wsl$
+    
+    # Windows 檔案位於 mnt
+    原先 ex: C:\Users\PC\Code\Python\Publish-To-Git\Ansible-Deploy-To-Edge
+    路徑映射 ex: /mnt/c/Users/PC/Code/Python/Publish-To-Git/Ansible-Deploy-To-Edge
+    ```
