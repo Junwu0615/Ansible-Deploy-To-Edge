@@ -5,22 +5,6 @@
 
 <br>
 
-## *⭐ Ansible-Deploy-To-Edge ⭐*
+## *⭐ 於 Windows 10 進行多裝置模擬測試 ⭐*
 
-### *A.　Current Progress*
-|項目|敘述|完成時間|
-|:--:|:--:|:--:|
-| 專案上架 | - | 2025-09-29 |
-| 撰寫 README | - | 2025-09-29 |
-| 一鍵部署服務測試 | - | - |
-
-
-<br>
-
-### *B.　Notice*
-- #### *確保已建置 [Docker-Registry-Server 服務](https://github.com/Junwu0615/Docker-Registry-Server)*
-- #### *確保已建置 [WSL 環境](./note/wsl.md)*
-- #### *確保已[準備部署 Images & 腳本](./note/sample_script.md)*
-- #### *於 Windows 10 [進行多裝置模擬測試](./note/test.md)*
-
-<br>
+### *A.　...*
