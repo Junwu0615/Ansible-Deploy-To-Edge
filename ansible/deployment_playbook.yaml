@@ -21,7 +21,7 @@
         group: root
         mode: '0644'
 
-    - name: 2. ⚠️ 必須手動重啟 Docker Desktop 以載入新的配置
+    - name: 2. 必須手動重啟 Docker Desktop 以載入新的配置
       ansible.builtin.pause:
         prompt: |
           =======================================================

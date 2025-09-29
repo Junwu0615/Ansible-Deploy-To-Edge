@@ -30,6 +30,7 @@
   - #### *ansible-playbook : 呼叫 Ansible 執行器*
   - #### *-i inventory.ini : 指定目標主機和變數的來源檔案*
   - #### *deployment_playbook.yaml : 指定任務邏輯的來源檔案*
+  - ![PNG](../sample/ansible_success.PNG)
 
 <br>
 
