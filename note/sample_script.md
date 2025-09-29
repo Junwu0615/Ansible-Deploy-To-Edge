@@ -8,7 +8,7 @@
 ## *⭐ 準備部署 Images & 腳本 ( 提供範例 ) ⭐*
 
 - #### *A.　確認專案路徑是否有範例腳本*
-- ![PNG](../sample/script.PNG)
+- ![PNG](../sample/sample_script.jpg)
 
 <br>
 
@@ -39,8 +39,23 @@
     docker stack rm pc-hello-world
     ```
     
-  - ![PNG](../sample/test_success.PNG)
+  - ![PNG](../sample/sample_success.PNG)
     
 <br>
 
 - #### *C.　上傳腳本至 Docker-Registry ( 須提前建置 )*
+  - #### *檢視欲推送的 Images 項目 # pc-hello-world*
+    ```bash
+    docker images -a
+    ```
+
+  - #### *標記 `pc-hello-world` 映像檔*
+    ```bash
+    docker tag pc-hello-world localhost:5000/pc-hello-world:latest
+    ```
+
+  - #### *推送該映像檔*
+    ```bash
+    docker push localhost:5000/pc-hello-world:latest
+    ```
+  - ![PNG](../sample/script_push.PNG)
