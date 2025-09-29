@@ -9,23 +9,57 @@
 
   tasks:
     # ----------------------------------------------------
-    - name: A.1 安裝 Python 編譯所需系統套件
+    # 任務 A.1: 安裝編譯工具
+    - name: A.1 安裝系統套件 ( 開發工具, Python SDK )
       ansible.builtin.apt:
         name:
           - python3-dev
-          - build-essential # 通常包含 C/C++ 編譯器，以防萬一
+          - python3-docker
+          - build-essential
         state: present
-        update_cache: true  # 這個任務需要更新快取
+        update_cache: true
 
     # ----------------------------------------------------
-    - name: A.2 安裝 Docker & Compose 模組
-      ansible.builtin.pip:
-        name:
-          - docker          # Docker SDK for Python
-          - docker-compose  # Docker Compose V1 Python Library
-        state: present
-        # 關鍵修正：加入 extra_args 繞過 PEP 668 限制
-        extra_args: --break-system-packages
+    # A.2. 手動下載並安裝 Docker Compose V2 CLI
+    - name: A.2.0 確保 Docker CLI 外掛程式目錄存在
+      ansible.builtin.file:
+        path: /usr/local/lib/docker/cli-plugins
+        state: directory
+        mode: '0755' # 所有者(讀/寫/執行)、群組(讀/執行)、其他人(讀/執行)
+
+    # 關鍵修正：在下載前，強制移除任何可能存在的舊檔案/連結
+    - name: A.2.1 清理舊的 Docker Compose CLI 檔案或連結
+      ansible.builtin.file:
+        path: /usr/local/lib/docker/cli-plugins/docker-compose
+        state: absent # 確保檔案/連結不存在
+
+    - name: A.2.2 下載 Docker Compose V2 二進制檔案 ( get_url 具備 Idempotency )
+      ansible.builtin.get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64"
+        dest: /usr/local/lib/docker/cli-plugins/docker-compose
+        mode: '0755' # 所有者(讀/寫/執行)、群組(讀/執行)、其他人(讀/執行)
+
+    - name: A.2.3 建立 Docker Compose CLI 的軟連結 ( /usr/local/bin )
+      ansible.builtin.file:
+        src: /usr/local/lib/docker/cli-plugins/docker-compose
+        dest: /usr/local/bin/docker-compose
+        state: link
+        force: true
+
+    - name: A.2.4 建立新版 Docker CLI 連結 ( /usr/bin )
+      ansible.builtin.file:
+        src: /usr/local/lib/docker/cli-plugins/docker-compose
+        dest: /usr/bin/docker-compose
+        state: link
+        force: true
+
+    # ----------------------------------------------------
+    # A.3 清理系統快取 ( 解決空間佔用問題 )
+    - name: A.3 清理 Apt 套件快取並移除不必要的相依性 ( 釋放磁碟空間 )
+      ansible.builtin.apt:
+        autoclean: true
+        autoremove: true
+
 
 # ----------------------------------------------------
 # TODO Play 2: 應用程式部署 (針對每個目標裝置迴圈運行)
@@ -52,7 +86,7 @@
       copy:
         src: "{{ playbook_dir }}/templates/.env"
         dest: "/tmp/.env"
-        mode: '0644'
+        mode: '0644' # 所有者(讀/寫)、群組(讀)、其他人(讀)
       # 由於 .env 內容對所有裝置都一樣 # 只需執行一次
       run_once: true
 
