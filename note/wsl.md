@@ -78,7 +78,7 @@
     ```bash
     docker ps
     ```
-  - ![PNG](../sample/docker%20ps.PNG)
+  - ![PNG](../sample/docker_ps.PNG)
 
 <br>
 

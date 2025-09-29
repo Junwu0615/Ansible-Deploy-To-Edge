@@ -43,4 +43,4 @@
   docker logs pc-hello-world-edge-01
   docker logs pc-hello-world-edge-02
   ```
-  - ![PNG](../sample/docker ps 01.PNG)
+  - ![PNG](../sample/docker_ps_01.PNG)
