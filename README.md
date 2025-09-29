@@ -21,4 +21,4 @@
 - #### *確保已建置 [Docker-Registry-Server 服務](https://github.com/Junwu0615/Docker-Registry-Server)*
 - #### *確保已建置 [WSL 環境](./note/wsl.md)*
 - #### *確保已[準備部署 Images & 腳本](./note/sample_script.md)*
-- #### *於 Windows 10 [進行多裝置模擬測試](./note/ansible.md)*
+- #### *於 Windows 10 [進行多裝置模擬一鍵下發服務測試](./note/ansible.md)*

@@ -5,7 +5,7 @@
 
 <br>
 
-## *⭐ 於 Windows 10 進行多裝置模擬測試 ⭐*
+## *⭐ 於 Windows 10 進行多裝置模擬一鍵下發服務測試 ⭐*
 
 #### *A.　先確認 Registry 擁有的 Images 清單*
   ```
@@ -18,8 +18,10 @@
 
 #### *B.　確認 Ansible 腳本已準備妥當*
 - #### *inventory.ini*
-- #### *docker-compose.yaml.j2*
 - #### *deployment_playbook.yaml*
+- #### *files/daemon.json*
+- #### *templates/.env*
+- #### *templates/docker-compose.yaml.j2*
 
 <br>
 
@@ -29,7 +31,7 @@
   ansible-playbook -i inventory.ini deployment_playbook.yaml --ask-become-pass
   ```
   - #### *ansible-playbook : 呼叫 Ansible 執行器*
-  - #### *-i inventory.ini : 指定目標主機和變數的來源檔案*
+  - #### *-i inventory.ini : 指定目標主機 & 變數的來源檔案*
   - #### *deployment_playbook.yaml : 指定任務邏輯的來源檔案*
   - ![PNG](../sample/ansible_success_00.PNG)
   - ![PNG](../sample/ansible_success_01.PNG)
