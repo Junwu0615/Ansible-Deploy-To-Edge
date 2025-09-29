@@ -28,10 +28,10 @@
         mode: '0755' # 所有者(讀/寫/執行)、群組(讀/執行)、其他人(讀/執行)
 
     # 關鍵修正：在下載前，強制移除任何可能存在的舊檔案/連結
-    - name: A.2.1 清理舊的 Docker Compose CLI 檔案或連結
-      ansible.builtin.file:
-        path: /usr/local/lib/docker/cli-plugins/docker-compose
-        state: absent # 確保檔案/連結不存在
+#    - name: A.2.1 清理舊的 Docker Compose CLI 檔案或連結
+#      ansible.builtin.file:
+#        path: /usr/local/lib/docker/cli-plugins/docker-compose
+#        state: absent # 確保檔案/連結不存在
 
     - name: A.2.2 下載 Docker Compose V2 二進制檔案 ( get_url 具備 Idempotency )
       ansible.builtin.get_url:
@@ -97,27 +97,26 @@
         dest: "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml"
 
     # ----------------------------------------------------
-    - name: B.5 啟動容器 ( 使用 community.docker.docker_compose )
-      community.docker.docker_compose:
-        project_name: "{{ DEVICE_ID | lower }}"
-        files:
-          - "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml"
-        project_src: /tmp
-        state: present # 確保服務存在且運行
+#    - name: B.5 啟動容器 ( 使用 community.docker.docker_compose )
+#      community.docker.docker_compose:
+#        project_name: "{{ DEVICE_ID | lower }}"
+#        files:
+#          - "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml"
+#        project_src: /tmp
+#        state: present # 確保服務存在且運行
+
+    - name: B.5 啟動容器 ( 使用 CLI command )
+      ansible.builtin.command:
+        # -p (project name): 使用裝置 ID 作為專案名稱
+        # -f (file): 使用 B.4 渲染好的、針對該裝置唯一的 YAML 檔案
+        cmd: docker-compose -p "{{ DEVICE_ID | lower }}" -f "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml" up -d
 
     # ----------------------------------------------------
     - name: B.6 驗證容器狀態
-      command: docker ps
+      command: docker ps -f name=pc-hello-world-{{ DEVICE_ID | lower }}
       register: docker_ps
       changed_when: false
+      failed_when: "'Up' not in docker_ps.stdout"
 
     - debug:
         var: docker_ps.stdout
-
-#    - name: B.6 驗證容器狀態
-#      command: docker ps -f name=pc-hello-world-{{ DEVICE_ID | lower }}
-#      register: docker_ps
-#      changed_when: false
-#      failed_when: "'Up' not in docker_ps.stdout"
-#      debug:
-#        var: docker_ps.stdout
