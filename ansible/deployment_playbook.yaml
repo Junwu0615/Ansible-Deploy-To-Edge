@@ -1,48 +1,89 @@
 ---
-- name: 模擬部署 - 使用 Ansible 將指定服務一鍵下發到所有邊緣裝置
-#  hosts: wsl_hosts
+# ----------------------------------------------------
+# TODO Play 1: 環境初始化 (只針對實體主機運行一次)
+# ----------------------------------------------------
+- name: A. 環境初始化 - 安裝必要套件
+  hosts: wsl_hosts
+  become: true # 需要 root 權限來安裝系統套件和 pip 系統級別套件
+  gather_facts: false # 不需要收集主機資訊，節省時間
+
+  tasks:
+    # ----------------------------------------------------
+    - name: A.1 安裝 Python 編譯所需系統套件
+      ansible.builtin.apt:
+        name:
+          - python3-dev
+          - build-essential # 通常包含 C/C++ 編譯器，以防萬一
+        state: present
+        update_cache: true  # 這個任務需要更新快取
+
+    # ----------------------------------------------------
+    - name: A.2 安裝 Docker & Compose 模組
+      ansible.builtin.pip:
+        name:
+          - docker          # Docker SDK for Python
+          - docker-compose  # Docker Compose V1 Python Library
+        state: present
+        # 關鍵修正：加入 extra_args 繞過 PEP 668 限制
+        extra_args: --break-system-packages
+
+# ----------------------------------------------------
+# TODO Play 2: 應用程式部署 (針對每個目標裝置迴圈運行)
+# ----------------------------------------------------
+- name: B. 模擬部署 - 使用 Ansible 將指定服務一鍵下發到所有邊緣裝置
   hosts: device_configs
-  become: false
+  become: false # 運行 Docker 通常不需要 root 權限，除非您需要 sudo
   gather_facts: false
 
   tasks:
     # ----------------------------------------------------
-    - name: 1. 確認裝置資訊
+    - name: B.1 確認裝置資訊
       debug:
         msg: "Deploying to {{ inventory_hostname }} with DEVICE_ID={{ DEVICE_ID }}, PORT={{ DEPLOY_PORT }}"
 
     # ----------------------------------------------------
-    - name: 2. 拉取映像檔
+    - name: B.2 拉取映像檔
       docker_image:
         name: "{{ REGISTRY_HOST_PORT }}/pc-hello-world:latest"
         source: pull
 
     # ----------------------------------------------------
-#    - name: 3. 啟動容器 (docker-compose up) # 舊版，未使用模板 # docker-compose 無法用 jinja2 模板化
-#      command: docker-compose -p "{{ DEVICE_ID | lower }}" -f "{{ playbook_dir }}/../docker/script/docker-compose.yaml" up -d
-
-    # ----------------------------------------------------
-    - name: 3.0. 複製 .env 檔案到 /tmp/
+    - name: B.3 複製 .env 檔案到 /tmp/ ( 執行一次 )
       copy:
         src: "{{ playbook_dir }}/templates/.env"
         dest: "/tmp/.env"
         mode: '0644'
+      # 由於 .env 內容對所有裝置都一樣 # 只需執行一次
+      run_once: true
 
-    - name: 3.1. 渲染 docker-compose 檔案
+    - name: B.4 渲染 docker-compose 檔案
       template:
         src: "{{ playbook_dir }}/templates/docker-compose.yaml.j2"
         # 儲存為一個新的純 YAML 檔案，這樣 docker-compose 才能讀取
         dest: "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml"
 
     # ----------------------------------------------------
-    - name: 3.2. 啟動容器 ( docker-compose up )
-      command: docker-compose -p "{{ DEVICE_ID | lower }}" -f "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml" up -d
+    - name: B.5 啟動容器 ( 使用 community.docker.docker_compose )
+      community.docker.docker_compose:
+        project_name: "{{ DEVICE_ID | lower }}"
+        files:
+          - "/tmp/docker-compose-{{ DEVICE_ID | lower }}.yaml"
+        project_src: /tmp
+        state: present # 確保服務存在且運行
 
     # ----------------------------------------------------
-    - name: 4. 驗證容器狀態
+    - name: B.6 驗證容器狀態
       command: docker ps
       register: docker_ps
       changed_when: false
 
     - debug:
         var: docker_ps.stdout
+
+#    - name: B.6 驗證容器狀態
+#      command: docker ps -f name=pc-hello-world-{{ DEVICE_ID | lower }}
+#      register: docker_ps
+#      changed_when: false
+#      failed_when: "'Up' not in docker_ps.stdout"
+#      debug:
+#        var: docker_ps.stdout
