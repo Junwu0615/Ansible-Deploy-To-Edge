@@ -1,77 +1,39 @@
 ---
-- name: Deploy Edge Services from Private Registry
-#  hosts: wsl_host
-  hosts: device_configs
-  become: yes
+- name: 部署應用程式到邊緣裝置
+  hosts: wsl_hosts
+  become: false
+  gather_facts: false
 
   tasks:
-    - name: 0. 確保 Docker 配置目錄存在
-      ansible.builtin.file:
-        path: /etc/docker
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-      become: yes
-
-    - name: 1. 配置 Insecure Registry (daemon.json)
-      copy:
-        src: "{{ playbook_dir }}/files/daemon.json"
-        dest: /etc/docker/daemon.json
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: 2. 必須手動重啟 Docker Desktop 以載入新的配置
-      ansible.builtin.pause:
-        prompt: |
-          =======================================================
-          請注意：您必須手動重啟 Windows 上的 Docker Desktop！
-          
-          1. 儲存 daemon.json。
-          2. 在 Windows 系統匣中右鍵點擊 Docker 圖示。
-          3. 選擇 "Restart"。
-          
-          重啟完成後，請按 Enter 繼續部署...
-          =======================================================
+    # ----------------------------------------------------
+    - name: 1. 確認裝置資訊
+      debug:
+        msg: "Deploying to {{ inventory_hostname }} with DEVICE_ID={{ DEVICE_ID }}, PORT={{ DEPLOY_PORT }}"
 
     # ----------------------------------------------------
-    # --- 模擬多裝置部署的主循環 (單任務迴圈) ---
+    - name: 2. 拉取映像檔
+      docker_image:
+        name: "{{ REGISTRY_HOST_PORT }}/pc-hello-world:latest"
+        source: pull
+
     # ----------------------------------------------------
+    - name: 3. 啟動容器
+      docker_container:
+        name: pc-hello-world
+        image: "{{ REGISTRY_HOST_PORT }}/pc-hello-world:latest"
+        state: started
+        restart_policy: always
+        env:
+          DEVICE_ID: "{{ DEVICE_ID }}"
+          LOG_LEVEL: "{{ LOG_LEVEL }}"
+        published_ports:
+          - "{{ DEPLOY_PORT }}:8080"
 
-    - name: 3.a. 建立裝置專屬部署目錄 ({{ item }})
-      ansible.builtin.file:
-        path: "/opt/{{ item }}_app"
-        state: directory
-        owner: "{{ ansible_user }}"
-        mode: '0755'
-      # ⚠️ 必須將 loop 放在這裡
-      loop: "{{ groups['device_configs'] }}"
-      # 這裡不需要 become: yes，因為上層 Playbook 已經定義了
+    # ----------------------------------------------------
+    - name: 4. 驗證容器狀態
+      command: docker ps
+      register: docker_ps
+      changed_when: false
 
-    - name: 3.b. 複製 docker-compose.yaml 模板並渲染配置 ({{ item }})
-      ansible.builtin.template:
-        src: docker-compose.yml.j2
-        dest: "/opt/{{ item }}_app/docker-compose.yml"
-        owner: "{{ ansible_user }}"
-        mode: '0644'
-      vars:
-        DEVICE_ID: "{{ hostvars[item]['DEVICE_ID'] }}"
-        LOG_LEVEL: "{{ hostvars[item]['LOG_LEVEL'] }}"
-        DEPLOY_PORT: "{{ hostvars[item]['DEPLOY_PORT'] }}"
-      loop: "{{ groups['device_configs'] }}"
-
-    - name: 3.c. 部署 Docker Compose 服務 ({{ item }})
-      community.docker.docker_compose_v2:
-        project_src: "/opt/{{ item }}_app"
-        project_name: "{{ item }}_project"
-        state: present
-        pull: yes
-      environment:
-        DEVICE_ID: "{{ hostvars[item]['DEVICE_ID'] }}"
-        LOG_LEVEL: "{{ hostvars[item]['LOG_LEVEL'] }}"
-        REGISTRY_HOST_PORT: "{{ REGISTRY_HOST_PORT }}"
-      # ⚠️ 這裡必須明確指定 become: no，因為 docker-compose 不應用 root 執行
-      become: no
-      remote_user: "{{ ansible_user }}"
-      loop: "{{ groups['device_configs'] }}"
+    - debug:
+        var: docker_ps.stdout

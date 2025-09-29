@@ -25,7 +25,8 @@
 
 #### *C.　執行 Ansible Playbook*
   ```bash
-  ansible-playbook -i inventory.ini deployment_playbook.yaml --ask-become-pass
+  ansible-playbook -i inventory.ini deployment_playbook.yaml
+  # ansible-playbook -i inventory.ini deployment_playbook.yaml --ask-become-pass
   ```
   - #### *ansible-playbook : 呼叫 Ansible 執行器*
   - #### *-i inventory.ini : 指定目標主機和變數的來源檔案*
